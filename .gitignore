@@ -1,2 +1,28 @@
 *docx
 /**/*.docx
+
+# Ignore object files, executables, and other build artifacts
+*.o
+*.obj
+*.exe
+*.out
+*.a
+*.lib
+*.so
+*.dll
+
+# Ignore build directories
+/build/
+/bin/
+/Debug/
+/Release/
+
+# Ignore IDE specific files
+*.log
+*.workspace
+*.idea/
+*.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
