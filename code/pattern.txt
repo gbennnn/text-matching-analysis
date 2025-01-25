@@ -1,0 +1,1 @@
+Algoritma yang baik haruslah memiliki waktu eksekusi yang cepat dan penggunaan memori yang minimal.
