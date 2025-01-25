@@ -1,5 +1,7 @@
 *docx
 /**/*.docx
+/code/output_lcs.txt
+/code/output_rabinKarp.txt
 
 # Ignore object files, executables, and other build artifacts
 *.o

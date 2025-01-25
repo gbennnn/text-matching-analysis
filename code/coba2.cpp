@@ -1,112 +1,87 @@
 #include <iostream>
 #include <fstream>
-#include <string.h>
+#include <string>
+#include <vector>
 using namespace std;
 
-int ch = 256;
+const int ch = 256;
 
-int match(string pattern, string text, int i, int j, int pLength, int lineNumber)
+// Fungsi untuk mencocokkan pola dengan teks
+int match(const string &pattern, const string &text, int i, int pLength, int lineNumber)
 {
-    for (j = 0; j < pLength; j++)
+    for (int j = 0; j < pLength; j++)
     {
         if (pattern[j] != text[i + j])
         {
-            break;
+            return -1;
         }
     }
-
-    if (j == pLength)
-    {
-        cout << "Pattern found at index " << i << " at line number " << lineNumber << "\n"
-             << endl;
-    }
-
+    cout << "Pattern ditemukan pada indeks " << i << " di baris nomor " << lineNumber << endl;
     return i;
 }
 
-int reHash(int dHash, string text, int i, int pLength, int z, int prime)
+// Fungsi untuk menghitung ulang nilai hash
+int reHash(int dHash, const string &text, int i, int pLength, int z, int prime, int ch)
 {
     int f = dHash - text[i] * z;
     int g = text[i + pLength];
-
-    dHash = (ch * (f) + g) % prime;
-
+    dHash = (ch * f + g) % prime;
     if (dHash < 0)
     {
-        dHash = dHash + prime;
+        dHash += prime;
     }
-
     return dHash;
 }
 
-bool setPrime(int rem)
+// Fungsi untuk memeriksa apakah sebuah bilangan prima
+bool isPrime(int num)
 {
-    bool isPrime = true;
-    int x = 0;
-
-    for (x = 2; x <= rem / 2; x++)
+    if (num <= 1)
+        return false;
+    if (num <= 3)
+        return true;
+    if (num % 2 == 0 || num % 3 == 0)
+        return false;
+    for (int i = 5; i * i <= num; i += 6)
     {
-        if (rem % x == 0)
-        {
-            isPrime = false;
-            break;
-        }
+        if (num % i == 0 || num % (i + 2) == 0)
+            return false;
     }
-
-    return isPrime;
+    return true;
 }
-
-void lcsSearch(string line2)
+void lcsSearch(const string &pattern)
 {
-    cout << "\n\n================= LCS SEARCH RESULT FOR PATTERN : \"" << line2 << "\" =================\n\n"
+    cout << "\n\n================= HASIL PENCARIAN LCS UNTUK POLA : \"" << pattern << "\" =================\n\n"
          << endl;
 
-    string line1;
-    string A;
-    string B;
-
+    string line;
     int lcsSearchTime = 0;
     int lcsSearchLineCount = 0;
-    int position = 0;
 
     ofstream lcsOutputFile("output_lcs.txt");
     ifstream lcsInputFile("dokumen.txt");
 
-    while (getline(lcsInputFile, line1))
+    while (getline(lcsInputFile, line))
     {
         lcsSearchLineCount++;
-        A = line1;
-        B = line2;
+        string A = line;
+        string B = pattern;
 
-        int m = A.length(); // length of string A
-        int n = B.length(); // length of string B
+        int m = A.length();
+        int n = B.length();
 
-        int similarity = 0;
-
-        int c[m + 1][n + 1];  // array for storing length of LCS (for matrix)
-        char b[m + 1][n + 1]; // array for storing direction of LCS (for matrix)
-        c[0][0] = 0;
-
-        for (int i = 1; i <= m; i++)
-        {
-            c[i][0] = 0;
-        }
-
-        for (int j = 1; j <= n; j++)
-        {
-            c[0][j] = 0;
-        }
+        vector<vector<int>> c(m + 1, vector<int>(n + 1, 0));
+        vector<vector<char>> b(m + 1, vector<char>(n + 1, 0));
 
         for (int i = 1; i <= m; i++)
         {
             for (int j = 1; j <= n; j++)
             {
-                lcsSearchTime++; // count the number of function calls
+                lcsSearchTime++;
                 if (A[i - 1] == B[j - 1])
                 {
                     c[i][j] = c[i - 1][j - 1] + 1;
                     b[i][j] = 'D'; // diagonal
-                    position = i;
                 }
                 else if (c[i - 1][j] >= c[i][j - 1])
                 {
@@ -121,37 +96,32 @@ void lcsSearch(string line2)
             }
         }
 
-        // Printing Longest Common Subsequence
-        similarity = (c[m][n] * 100) / n;
-
+        int similarity = (c[m][n] * 100) / n;
         if (similarity > 30)
         {
-            lcsOutputFile << "\nLength of Longest Common Subsequence: " << c[m][n] << endl;
-            cout << "Length of Longest Common Subsequence: " << c[m][n] << endl;
-            lcsOutputFile << "Similarity: " << similarity << "%" << endl;
-            cout << "Similarity: " << similarity << "%" << endl;
+            lcsOutputFile << "\nPanjang LCS: " << c[m][n] << endl;
+            cout << "Panjang LCS: " << c[m][n] << endl;
+            lcsOutputFile << "Kesamaan: " << similarity << "%" << endl;
+            cout << "Kesamaan: " << similarity << "%" << endl;
         }
 
         int index = c[m][n];
-
-        char ans[index]; // array for storing LCS
+        string ans(index, ' ');
 
         int i = m, j = n;
-
         while (i > 0 && j > 0)
         {
-            if (b[i][j] == 'D') // for every diagonal there is value of LCS
+            if (b[i][j] == 'D')
             {
-                ans[index - 1] = A[i - 1];
+                ans[--index] = A[i - 1];
                 i--;
                 j--;
-                index--;
             }
             else if (b[i][j] == 'U')
             {
                 i--;
             }
-            else // L for Left
+            else
             {
                 j--;
             }
@@ -159,27 +129,20 @@ void lcsSearch(string line2)
 
         if (similarity > 30)
         {
-            lcsOutputFile << "\nLongest Common Subsequence: " << ans << " at line number " << lcsSearchLineCount << endl;
-            cout << "Longest Common Subsequence: " << ans << " at line number " << lcsSearchLineCount << endl;
-
-            // for (int i = 0; i < c[m][n]; i++)
-            // {
-            //     lcsOutputFile << ans[i];
-            //     cout << ans[i];
-            // }
-            // lcsOutputFile << endl;
-            // cout << endl;
+            lcsOutputFile << "\nLCS: " << ans << " di baris nomor " << lcsSearchLineCount << endl;
+            cout << "LCS: " << ans << " di baris nomor " << lcsSearchLineCount << endl;
         }
     }
 
-    cout << "\nTime taken to search for LCS: " << lcsSearchTime << " function calls" << endl;
-    lcsOutputFile << "\nTime taken to search for LCS: " << lcsSearchTime << " function calls" << endl;
+    cout << "\nWaktu yang dibutuhkan untuk mencari LCS: " << lcsSearchTime << " kali panggilan fungsi" << endl;
+    lcsOutputFile << "\nWaktu yang dibutuhkan untuk mencari LCS: " << lcsSearchTime << " kali panggilan fungsi" << endl;
 }
 
-void rabinKarpSearch(string pattern)
+// Fungsi untuk mencari pola menggunakan algoritma Rabin-Karp
+void rabinKarpSearch(const string &pattern)
 {
-    // string document = "ABAAABCD";
-    // string pattern = "ABC";
+    cout << "\n\n================= HASIL PENCARIAN RABIN KARP UNTUK POLA : \"" << pattern << "\" =================\n\n"
+         << endl;
 
     string document;
     ofstream rabinKarpOutputFile("output_rabinKarp.txt");
@@ -191,27 +154,11 @@ void rabinKarpSearch(string pattern)
     while (getline(rabinKarpInputFile, document))
     {
         lineNumber++;
-        int s = 0;
-        int prime = 0;
-
-        cout << "\n\n================= RABIN KARP SEARCH RESULT FOR PATTERN : \"" << pattern << "\" =================\n\n"
-             << endl;
-
-        while (true)
-        {
-            timeCount++;
-            s = rand() % 100 + 1985;
-            if (setPrime(s))
-            {
-                prime = s;
-                break;
-            }
-        }
-
+        const vector<int> primes = {1987, 1993, 1997, 1999, 2003, 2011, 2017, 2027, 2029, 2039};
+        int prime = primes[rand() % primes.size()];
         int pLength = pattern.length();
         int dLength = document.length();
 
-        int j = 0;
         int pHash = 0; // hash value for pattern
         int dHash = 0; // hash value for document
 
@@ -231,50 +178,46 @@ void rabinKarpSearch(string pattern)
         }
 
         int offset = dLength - pLength;
-        int l = 0;
 
-        while (l <= offset)
+        for (int l = 0; l <= offset; l++)
         {
-            // to check if the hash values are equal
             if (pHash == dHash)
             {
-                // if the hash values come out to be same
-                // we can now check each character of both the string and pattern one by one
                 timeCount++;
-                match(pattern, document, l, j, pLength, lineNumber);
+                int matchIndex = match(pattern, document, l, pLength, lineNumber);
+                if (matchIndex != -1)
+                {
+                    rabinKarpOutputFile << "Pattern ditemukan pada indeks " << matchIndex << " di baris nomor " << lineNumber << endl;
+                }
             }
-
             if (l < offset)
             {
-                dHash = reHash(dHash, document, l, pLength, z, prime);
+                dHash = reHash(dHash, document, l, pLength, z, prime, ch);
             }
-
-            l++;
         }
-
-        // moving character by character forward in the text input
-        if (l < offset)
-        {
-            // we rehash the values if the pattern is not found
-            dHash = reHash(dHash, document, l, pLength, z, prime);
-        }
-        l++;
     }
 }
 
 int main()
 {
-    char space = ' ';
-
     string patternLine;
     ifstream patternFile("pattern.txt");
 
-    while (getline(patternFile, patternLine, space))
+    while (getline(patternFile, patternLine, ' '))
     {
-        lcsSearch(patternLine);
-        rabinKarpSearch(patternLine);
+        if (!patternLine.empty())
+        {
+            lcsSearch(patternLine);
+            rabinKarpSearch(patternLine);
+        }
     }
     patternFile.close();
 
     return 0;
 }
+// patternFile.close();
+// patternFile.close();
+
+// return 0;
+// }
+// while (getline(patternFile, patternLine))
