@@ -16,7 +16,7 @@ int match(const string &pattern, const string &text, int i, int pLength, int lin
             return -1;
         }
     }
-    cout << "Pattern ditemukan pada indeks " << i << " di baris nomor " << lineNumber << endl;
+    cout << "Pattern \"" << pattern << "\" ditemukan pada indeks " << i << " di baris nomor " << lineNumber << endl;
     return i;
 }
 
@@ -49,9 +49,71 @@ bool isPrime(int num)
     }
     return true;
 }
+
+// ALGORITMA RABIN KARP
+void rabinKarpSearch(const string &pattern)
+{
+    cout << "\n\n================= HASIL PENCARIAN RABIN KARP UNTUK POLA : \"" << pattern << "\" =================\n\n"
+         << endl;
+
+    string document;
+    ofstream rabinKarpOutputFile("output_rabinKarp.txt");
+    ifstream rabinKarpInputFile("dokumen.txt");
+
+    int timeCount = 0;
+    int lineNumber = 0;
+
+    while (getline(rabinKarpInputFile, document))
+    {
+        lineNumber++;
+        const vector<int> primes = {1987, 1993, 1997, 1999, 2003, 2011, 2017, 2027, 2029, 2039};
+        int prime = primes[rand() % primes.size()];
+        int pLength = pattern.length();
+        int dLength = document.length();
+
+        int pHash = 0; // hash value for pattern
+        int dHash = 0; // hash value for text
+
+        int z = 1; // hash variable
+
+        for (int i = 1; i <= pLength - 1; i++)
+        {
+            z = (z * ch) % prime;
+            timeCount++;
+        }
+
+        for (int j = 0; j < pLength; j++)
+        {
+            pHash = (ch * pHash + pattern[j]) % prime;
+            dHash = (ch * dHash + document[j]) % prime;
+            timeCount++;
+        }
+
+        int offset = dLength - pLength;
+
+        for (int l = 0; l <= offset; l++)
+        {
+            if (pHash == dHash)
+            {
+                timeCount++;
+                int matchIndex = match(pattern, document, l, pLength, lineNumber);
+                if (matchIndex != -1)
+                {
+                    rabinKarpOutputFile << "Pattern \"" << pattern << "\" ditemukan pada indeks " << matchIndex << " di baris nomor " << lineNumber << endl;
+                }
+            }
+            if (l < offset)
+            {
+                dHash = reHash(dHash, document, l, pLength, z, prime, ch);
+            }
+        }
+    }
+}
+
+// ALGORITMA LONGEST COMMON SUBSEQUENCE (LCS)
 void lcsSearch(const string &pattern)
 {
-    cout << "\n\n================= HASIL PENCARIAN LCS UNTUK POLA : \"" << pattern << "\" =================\n\n"
+    cout << "\n\n================= HASIL PENCARIAN LCS UNTUK PATTERN : \"" << pattern << "\" =================\n\n"
          << endl;
 
     string line;
@@ -99,10 +161,10 @@ void lcsSearch(const string &pattern)
         int similarity = (c[m][n] * 100) / n;
         if (similarity > 30)
         {
-            lcsOutputFile << "\nPanjang LCS: " << c[m][n] << endl;
-            cout << "Panjang LCS: " << c[m][n] << endl;
-            lcsOutputFile << "Kesamaan: " << similarity << "%" << endl;
-            cout << "Kesamaan: " << similarity << "%" << endl;
+            lcsOutputFile << "\nPanjang Pattern\t: " << c[m][n] << endl;
+            cout << "Panjang Pattern\t: " << c[m][n] << endl;
+            lcsOutputFile << "Similarity: " << similarity << "%" << endl;
+            cout << "Similarity\t: " << similarity << "%" << endl;
         }
 
         int index = c[m][n];
@@ -129,73 +191,14 @@ void lcsSearch(const string &pattern)
 
         if (similarity > 30)
         {
-            lcsOutputFile << "\nLCS: " << ans << " di baris nomor " << lcsSearchLineCount << endl;
-            cout << "LCS: " << ans << " di baris nomor " << lcsSearchLineCount << endl;
+            lcsOutputFile << "\nLCS: \"" << ans << "\" di baris nomor " << lcsSearchLineCount << endl;
+            cout << "LCS\t\t: \"" << ans << "\" di baris nomor " << lcsSearchLineCount << endl;
+            cout << endl;
         }
     }
 
-    cout << "\nWaktu yang dibutuhkan untuk mencari LCS: " << lcsSearchTime << " kali panggilan fungsi" << endl;
+    cout << "\nWaktu yang dibutuhkan untuk mencari pattern [\"" << pattern << "\"] adalah " << lcsSearchTime << " kali panggilan fungsi" << endl;
     lcsOutputFile << "\nWaktu yang dibutuhkan untuk mencari LCS: " << lcsSearchTime << " kali panggilan fungsi" << endl;
-}
-
-// Fungsi untuk mencari pola menggunakan algoritma Rabin-Karp
-void rabinKarpSearch(const string &pattern)
-{
-    cout << "\n\n================= HASIL PENCARIAN RABIN KARP UNTUK POLA : \"" << pattern << "\" =================\n\n"
-         << endl;
-
-    string document;
-    ofstream rabinKarpOutputFile("output_rabinKarp.txt");
-    ifstream rabinKarpInputFile("dokumen.txt");
-
-    int timeCount = 0;
-    int lineNumber = 0;
-
-    while (getline(rabinKarpInputFile, document))
-    {
-        lineNumber++;
-        const vector<int> primes = {1987, 1993, 1997, 1999, 2003, 2011, 2017, 2027, 2029, 2039};
-        int prime = primes[rand() % primes.size()];
-        int pLength = pattern.length();
-        int dLength = document.length();
-
-        int pHash = 0; // hash value for pattern
-        int dHash = 0; // hash value for document
-
-        int z = 1; // hash variable
-
-        for (int i = 1; i <= pLength - 1; i++)
-        {
-            z = (z * ch) % prime;
-            timeCount++;
-        }
-
-        for (int j = 0; j < pLength; j++)
-        {
-            pHash = (ch * pHash + pattern[j]) % prime;
-            dHash = (ch * dHash + document[j]) % prime;
-            timeCount++;
-        }
-
-        int offset = dLength - pLength;
-
-        for (int l = 0; l <= offset; l++)
-        {
-            if (pHash == dHash)
-            {
-                timeCount++;
-                int matchIndex = match(pattern, document, l, pLength, lineNumber);
-                if (matchIndex != -1)
-                {
-                    rabinKarpOutputFile << "Pattern ditemukan pada indeks " << matchIndex << " di baris nomor " << lineNumber << endl;
-                }
-            }
-            if (l < offset)
-            {
-                dHash = reHash(dHash, document, l, pLength, z, prime, ch);
-            }
-        }
-    }
 }
 
 int main()
@@ -215,9 +218,3 @@ int main()
 
     return 0;
 }
-// patternFile.close();
-// patternFile.close();
-
-// return 0;
-// }
-// while (getline(patternFile, patternLine))
