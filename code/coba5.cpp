@@ -5,6 +5,7 @@
 #include <chrono>
 #include <memory>
 #include <iomanip>
+#include <algorithm>
 #include <sys/resource.h>
 
 using namespace std;
@@ -233,8 +234,7 @@ double calculateRabinKarpAccuracy(const string &pattern, const vector<string> &a
     // Assuming actualMatches contains the correct indices of all occurrences of the pattern
 
     vector<int> rabinKarpMatches;
-    rabinKarpSearch(pattern); // This function modifies rabinKarpMatches internally
-    // ... (Implement logic to extract matched indices from rabinKarpOutputFile or modify rabinKarpSearch() to populate rabinKarpMatches) ...
+    rabinKarpSearch(pattern);
 
     int truePositives = 0;
     for (int match : rabinKarpMatches)
@@ -276,7 +276,6 @@ int main()
             // Calculate Rabin-Karp accuracy
             // (Assuming you have a way to obtain actualMatches from an external source)
             vector<string> actualMatches;
-            // ... (Populate actualMatches with the correct indices) ...
             double rabinKarpAccuracy = calculateRabinKarpAccuracy(patternLine, actualMatches);
 
             // Display results

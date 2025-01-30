@@ -15,32 +15,7 @@ using namespace std::chrono;
 
 const int ch = 256;
 
-// Function to match pattern with text
-int match(const string &pattern, const string &text, int i, int pLength, int lineNumber)
-{
-    for (int j = 0; j < pLength; j++)
-    {
-        if (pattern[j] != text[i + j])
-        {
-            return -1;
-        }
-    }
-    cout << "Pattern \"" << pattern << "\" ditemukan pada indeks " << i << " di baris nomor " << lineNumber << endl;
-    return i;
-}
-
-// Function to re-calculate hash value
-int reHash(int dHash, const string &text, int i, int pLength, int z, int prime, int ch)
-{
-    int f = dHash - text[i] * z;
-    int g = text[i + pLength];
-    dHash = (ch * f + g) % prime;
-    if (dHash < 0)
-    {
-        dHash += prime;
-    }
-    return dHash;
-}
+// ============== EVALUASI KINERJA ==============
 
 // Function to calculate execution time
 template <typename Func>
@@ -62,29 +37,49 @@ size_t estimateMemoryUsage()
     return usage.ru_maxrss * 1024; // Convert from kilobytes to bytes
 }
 
-// Function to calculate accuracy (for Rabin-Karp)
-double calculateRabinKarpAccuracy(const string &pattern, const vector<string> &actualMatches)
+// ================= ALGORITMA =================
+// Fungsi untuk mencocokkan pola dengan teks
+int match(const string &pattern, const string &text, int i, int pLength, int lineNumber)
 {
-    // Assuming actualMatches contains the correct indices of all occurrences of the pattern
-
-    vector<int> rabinKarpMatches;
-    rabinKarpSearch(pattern); // This function modifies rabinKarpMatches internally
-    // ... (Implement logic to extract matched indices from rabinKarpOutputFile or modify rabinKarpSearch() to populate rabinKarpMatches) ...
-
-    int truePositives = 0;
-    for (int match : rabinKarpMatches)
+    for (int j = 0; j < pLength; j++)
     {
-        if (find(actualMatches.begin(), actualMatches.end(), to_string(match)) != actualMatches.end())
+        if (pattern[j] != text[i + j])
         {
-            truePositives++;
+            return -1;
         }
     }
+    cout << "Pattern \"" << pattern << "\" ditemukan pada indeks " << i << " di baris nomor " << lineNumber << endl;
+    return i;
+}
 
-    if (rabinKarpMatches.empty())
+// Fungsi untuk menghitung ulang nilai hash
+int reHash(int dHash, const string &text, int i, int pLength, int z, int prime, int ch)
+{
+    int f = dHash - text[i] * z;
+    int g = text[i + pLength];
+    dHash = (ch * f + g) % prime;
+    if (dHash < 0)
     {
-        return actualMatches.empty() ? 1.0 : 0.0; // Handle cases with no matches
+        dHash += prime;
     }
-    return static_cast<double>(truePositives) / rabinKarpMatches.size();
+    return dHash;
+}
+
+// Fungsi untuk memeriksa apakah sebuah bilangan prima
+bool isPrime(int num)
+{
+    if (num <= 1)
+        return false;
+    if (num <= 3)
+        return true;
+    if (num % 2 == 0 || num % 3 == 0)
+        return false;
+    for (int i = 5; i * i <= num; i += 6)
+    {
+        if (num % i == 0 || num % (i + 2) == 0)
+            return false;
+    }
+    return true;
 }
 
 // ALGORITMA RABIN KARP
@@ -238,44 +233,52 @@ void lcsSearch(const string &pattern)
     lcsOutputFile << "\nWaktu yang dibutuhkan untuk mencari LCS: " << lcsSearchTime << " kali panggilan fungsi" << endl;
 }
 
+// ================= MAIN PROGRAM =================
+
 int main()
 {
     string patternLine;
     ifstream patternFile("pattern.txt");
 
-    while (getline(patternFile, patternLine, ' '))
+    if (!patternFile.is_open())
     {
-        if (!patternLine.empty())
+        cout << "File pattern.txt tidak ditemukan!" << endl;
+        return 1;
+    }
+    else
+    {
+        while (getline(patternFile, patternLine, ' '))
         {
-            // Measure LCS execution time and memory usage
-            long long lcsTime = measureExecutionTime([&]
-                                                     { lcsSearch(patternLine); });
-            size_t lcsMemory = estimateMemoryUsage();
-
-            // Measure Rabin-Karp execution time and memory usage
-            long long rabinKarpTime = measureExecutionTime([&]
-                                                           { rabinKarpSearch(patternLine); });
-            size_t rabinKarpMemory = estimateMemoryUsage();
-
-            // Calculate Rabin-Karp accuracy
-            // (Assuming you have a way to obtain actualMatches from an external source)
-            vector<string> actualMatches;
-            // ... (Populate actualMatches with the correct indices) ...
-            double rabinKarpAccuracy = calculateRabinKarpAccuracy(patternLine, actualMatches);
-
-            // Display results
-            cout << "\nPattern: " << patternLine << endl;
-            cout << "LCS:" << endl;
-            cout << "\tExecution Time: " << lcsTime << " microseconds" << endl;
-            cout << "\tMemory Usage: " << lcsMemory << " bytes" << endl;
-            cout << "Rabin-Karp:" << endl;
-            cout << "\tExecution Time: " << rabinKarpTime << " microseconds" << endl;
-            cout << "\tMemory Usage: " << rabinKarpMemory << " bytes" << endl;
-            cout << "\tAccuracy: " << fixed << setprecision(2) << rabinKarpAccuracy * 100 << "%" << endl;
+            if (!patternLine.empty())
+            {
+                lcsSearch(patternLine);
+                rabinKarpSearch(patternLine);
+            }
         }
     }
+
+    // Measure execution time and memory usage
+    long long lcsTime = measureExecutionTime([&]
+                                             { lcsSearch(patternLine); });
+    size_t lcsMemory = estimateMemoryUsage();
+
+    long long rabinKarpTime = measureExecutionTime([&]
+                                                   { rabinKarpSearch(patternLine); });
+    size_t rabinKarpMemory = estimateMemoryUsage();
+
+    // Display results
+    cout << "\nPattern: " << patternLine << endl;
+    cout << "LCS:" << endl;
+    cout << "\tExecution Time: " << lcsTime << " microseconds" << endl;
+    cout << "\tMemory Usage: " << lcsMemory << " bytes" << endl;
+    cout << "Rabin-Karp:" << endl;
+    cout << "\tExecution Time: " << rabinKarpTime << " microseconds" << endl;
+    cout << "\tMemory Usage: " << rabinKarpMemory << " bytes" << endl;
+    // cout << "\tAccuracy: " << fixed << setprecision(2) << rabinKarpAccuracy * 100 << "%" << endl;
 
     patternFile.close();
 
     return 0;
 }
+
+// cukup fix
